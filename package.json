@@ -1,0 +1,16 @@
+{
+  "name": "tank",
+  "version": "1.0.0",
+  "description": "AI Tank",
+  "author": "Brady Isom",
+  "license": "MIT",
+  "preferGlobal": true,
+  "bin": {
+    "tank": "index.js"
+  },
+  "dependencies": {
+    "q": "^1.4.1",
+    "yargs": "^3.15.0",
+    "lodash": "~3.10.0"
+  }
+}
