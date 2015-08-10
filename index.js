@@ -12,7 +12,7 @@ fs.readdirSync(normalizedPath).forEach(function(file) {
 	tanks[path.parse(file).name] = require("./tanks/" + file);
 });
 
-console.log('tanks', tanks);
+// console.log('tanks', tanks);
 
 var tank = tanks[argv.tank || 'noop'];
 

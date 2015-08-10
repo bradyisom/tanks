@@ -4,6 +4,8 @@ var q = require('Q');
 var _ = require('lodash');
 var EventEmitter = require('events').EventEmitter;
 
+var shared = require('./shared');
+
 var serverHost = argv.host || 'localhost';
 var serverPort = argv.port || 8080;
 var gameName = argv.game || 'tankyou:screen';
@@ -83,6 +85,7 @@ function start(turnCallback) {
 		status = status || {};
 		if(!status.status || status.status == 'running') {
 			if (status.status == 'running') {
+				status.grid = shared.parseGrid(status.grid);
 				promise = turnCallback(status, config);
 			}
 			else {
@@ -91,7 +94,31 @@ function start(turnCallback) {
 				promise = joinDefer.promise;
 			}
 			promise.then(function(cmd) {
-				return request(cmd);	
+				var requestPromise = null;
+				if (typeof(cmd) == 'object' && cmd.length) {
+					for(var i=0; i<cmd.length; i++) {
+						var subCmd = cmd[i];
+						if(!requestPromise) {
+							requestPromise = request(subCmd);
+						}
+						else {
+							requestPromise = requestPromise.then((function(subCmd){
+								return function(newStatus) {
+									if(newStatus.status == 'running') {
+										return request(subCmd);
+									}
+									else {
+										return newStatus;
+									}
+								};
+							})(subCmd));
+						}
+					}
+				}
+				else {
+					requestPromise = request(cmd);					
+				}
+				return requestPromise;	
 			}).then(function(status) {
 				events.emit('taketurn', status);
 			}).catch(function(error) {
@@ -116,3 +143,4 @@ function start(turnCallback) {
 }
 
 exports.start = start;
+exports.getConfig = getConfig;
