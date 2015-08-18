@@ -8,11 +8,7 @@ module.exports = function(state){
 
 	try{
 		var commands = [];
-		var myCoords = state.coords('X');
-		var batteryCoords = state.closestCoords('B');
-		if (batteryCoords.m != -1) {
-			commands = state.moveTowards(batteryCoords.m, batteryCoords.n, 'LWO');
-		}
+		commands = state.moveTowards(state.otherCoords.m, state.otherCoords.n, 'LW', true);
 
 		commands = _.flatten(commands);
 		if(!commands.length) {

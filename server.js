@@ -77,6 +77,16 @@ function getConfig() {
 	return config;
 }
 
+
+function parseGrid(grid) {
+	var rows = grid.trim('\n').split('\n');
+	for(var r=0; r<rows.length; r++) {
+		rows[r] = rows[r].split('');
+	}
+	return rows;
+}
+
+
 function start(turnCallback) {
 	var defer = q.defer();
 	var events = new EventEmitter();
@@ -85,8 +95,10 @@ function start(turnCallback) {
 		status = status || {};
 		if(!status.status || status.status == 'running') {
 			if (status.status == 'running') {
-				status.grid = shared.parseGrid(status.grid);
-				promise = turnCallback(status, config);
+				status.originalGrid = status.grid;
+				status.grid = parseGrid(status.grid);
+				var state = new shared.State(status, config);
+				promise = turnCallback(state);
 			}
 			else {
 				var joinDefer = q.defer();

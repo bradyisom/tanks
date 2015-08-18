@@ -1,24 +1,24 @@
 var _ = require('lodash');
+var PF = require('pathfinding');
 
-exports.dist = function(m1, n1, m2, n2) {
+var State = function(status, config) {
+	this.status = status;
+	this.config = config;
+	this.myCoords = this.coords('X');
+	this.otherCoords = this.coords('O');
+};
+
+State.prototype.dist = function(m1, n1, m2, n2) {
 	var m_dst = m1 - m2;
 	var n_dst = n1 - n2;
 	return Math.sqrt(m_dst*m_dst + n_dst*n_dst);
 }
 
-exports.parseGrid = function(grid) {
-	var rows = grid.split('\n');
-	for(var r=0; r<rows.length; r++) {
-		rows[r] = rows[r].split('');
-	}
-	return rows;
-}
-
-exports.objectCoords = function(grid, obj, closest_m, closest_n) {
+State.prototype.objectCoords = function(obj, closest_m, closest_n) {
 	var best_m = -1;
 	var best_n = -1;
-	for (var m=0; m<grid.length; m++) {
-		var row = grid[m]
+	for (var m=0; m<this.status.grid.length; m++) {
+		var row = this.status.grid[m];
 		for(var n=0; n<row.length; n++) {
 			var cell = row[n];
 			if(cell == obj) {
@@ -29,7 +29,7 @@ exports.objectCoords = function(grid, obj, closest_m, closest_n) {
 					};
 				}
 				if(best_m == -1 ||
-					exports.dist(best_m, best_n, closest_m, closest_n) >= exports.dist(m, n, closest_m, closest_n)) {
+					this.dist(best_m, best_n, closest_m, closest_n) >= this.dist(m, n, closest_m, closest_n)) {
 					best_m = m;
 					best_n = n;
 				}
@@ -42,13 +42,63 @@ exports.objectCoords = function(grid, obj, closest_m, closest_n) {
 	};
 }
 
-exports.coords = function(grid, obj) {
-	return exports.objectCoords(grid, obj, -1, -1);
+State.prototype.getObj = function(m, n) {
+	return this.status.grid[m][n];
 }
 
-exports.faceUp = function(orientation) {
+State.prototype.isObstacle = function(m, n) {
+	var obj = this.getObj(m, n);
+	return obj == 'W';
+}
+
+State.prototype.firstObstacle = function(dir, m, n) {
+	var m = m || this.myCoords.m;
+	var n = n || this.myCoords.n;
+	var m_start = m;
+	var n_start = n;
+	var m_end = m;
+	var n_end = n;
+	switch(dir) {
+	case 'up':
+		m_end = 0;
+		break;
+	case 'down':
+		m_end = this.status.grid.length-1;
+		break;
+	case 'left':
+		n_end = 0;
+		break;
+	case 'right':
+		n_end = this.status.grid[0].length-1;
+		break;
+	}
+	// console.log('firstObstacle', m_start, m_end, n_start, n_end);
+	for(var cm=m_start; (m_start < m_end) ? cm <= m_end : cm >= m_end; (m_start < m_end) ? cm++ : cm-- ) {
+		for(var cn=n_start; (n_start < n_end) ? cn <= n_end : cn >= n_end; (n_start < n_end) ? cn++ : cn-- ) {
+			if (this.isObstacle(cm, cn)) {
+				// console.log('obstacle', this.getObj(cm, cn), cm, cn);
+				return {
+					obj: this.getObj(cm, cn),
+					m: cm,
+					n: cn
+				};
+			}
+		}
+	}
+	return null;
+}
+
+State.prototype.coords = function(obj) {
+	return this.objectCoords(obj, -1, -1);
+}
+
+State.prototype.closestCoords = function(obj) {
+	return this.objectCoords(obj, this.myCoords.m, this.myCoords.n);
+}
+
+State.prototype.faceUp = function() {
 	var commands = [];
-	switch (orientation) {
+	switch (this.status.orientation) {
 	case "south":
 		commands.push("left")
 		commands.push("left")
@@ -56,19 +106,19 @@ exports.faceUp = function(orientation) {
 	case "east":
 		commands.push("left")
 		break;
-	case "north":
 	case "west":
 		commands.push("right")
 		break;
+	case "north":
 	default:
-		commands.push('noop')
+		// commands.push('noop')
 		break;
 	}
 	return commands;
 }
-exports.faceDown = function(orientation) {
+State.prototype.faceDown = function() {
 	var commands = [];
-	switch (orientation) {
+	switch (this.status.orientation) {
 	case "north":
 		commands.push("right")
 		commands.push("right")
@@ -76,19 +126,19 @@ exports.faceDown = function(orientation) {
 	case "east":
 		commands.push("right")
 		break;
-	case "south":
 	case "west":
 		commands.push("left")
 		break;
+	case "south":
 	default:
-		commands.push('noop')
+		// commands.push('noop')
 		break;
 	}
 	return commands;
 }
-exports.faceLeft = function(orientation) {
+State.prototype.faceLeft = function() {
 	var commands = [];
-	switch (orientation) {
+	switch (this.status.orientation) {
 	case "north":
 		commands.push("left")
 		break;
@@ -101,73 +151,85 @@ exports.faceLeft = function(orientation) {
 		break;
 	case "west":
 	default:
-		commands.push('noop')
+		// commands.push('noop')
 		break;
 	}
 	return commands;
 }
-exports.faceRight = function(orientation) {
+State.prototype.faceRight = function() {
 	var commands = [];
-	switch (orientation) {
+	switch (this.status.orientation) {
 	case "north":
 		commands.push("right")
+		break;
 	case "south":
 		commands.push("left")
+		break;
 	case "west":
 		commands.push("left")
 		commands.push("left")
+		break;
 	case "east":
 	default:
-		commands.push('noop')
+		// commands.push('noop')
+		break;
 	}
 	return commands;
 }
 
-exports.moveTowards = function(m, n, my_m, my_n, orientation) {
+State.prototype.moveTowards = function(m, n, obstacles, excludeFinal) {
+	var my_m = this.myCoords.m;
+	var my_n = this.myCoords.n;
 	var commands = [];
-	var options = [
-		function() {
-			if (m < my_m) {
-				commands.push(exports.faceUp(orientation));
-				commands.push('move');
-				return true
+	var finder = new PF.AStarFinder();
+	var t = this;
+	obstacles = obstacles || 'LW';
+	obstacles = obstacles.split('');
+	var grid = _.map(this.status.grid, function(row) {
+		return _.map(row, function(cell) {
+			if(~_.indexOf(obstacles, cell)) {
+				return 1;
 			}
-			return false
-		},
-		function() {
-			if (m > my_m) {
-				commands.push(exports.faceDown(orientation));
-				commands.push('move');
-				return true
+			else {
+				return 0;
 			}
-			return false
-		},
-		function() {
-			if (n < my_n) {
-				commands.push(exports.faceLeft(orientation));
-				commands.push('move');
-				return true
-			}
-			return false
-		},
-		function() {
-			if (n > my_n) {
-				commands.push(exports.faceRight(orientation));
-				commands.push('move');
-				return true
-			}
-			return false
-		},
-	];
+		});
+	});
 
-	options = _.shuffle(options);
-	for (var i=0; i<options.length; i++){
-		if(options[i]()) {
-			break;
+	grid = new PF.Grid(grid);
+	var path = finder.findPath(my_n, my_m, n, m, grid);
+	// console.log('path', path);
+
+	var nextSpot = path[1];
+	if(nextSpot && (!excludeFinal || nextSpot[1] != m || nextSpot[0] != n)) {
+		// console.log('nextSpot', nextSpot, my_n, my_m, n, m);
+		if(nextSpot[1] < my_m) {
+			// console.log('move up');
+			commands.push(t.faceUp());
+			commands.push('move');
+		}
+		else if(nextSpot[1] > my_m) {
+			// console.log('move down');
+			commands.push(t.faceDown());
+			commands.push('move');
+		}
+		else if(nextSpot[0] < my_n) {
+			// console.log('move left');
+			commands.push(t.faceLeft());
+			commands.push('move');
+		}
+		else if(nextSpot[0] > my_n) {
+			// console.log('move right');
+			commands.push(t.faceRight());
+			commands.push('move');
 		}
 	}
 
 	commands = _.flatten(commands);
 	return commands;
 }
+
+
+
+exports.State = State;
 
