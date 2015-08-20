@@ -9,14 +9,14 @@ module.exports = function(state){
 	if(state.status.energy > state.config.laser_energy) {
 		if (state.otherCoords.m == state.myCoords.m) {
 			if (state.otherCoords.n < state.myCoords.n) {
-				obstacle = state.firstObstacle('left');
+				obstacle = state.firstObstacle('west');
 				if(!obstacle || obstacle.n <= state.otherCoords.n) {
 					commands.push(state.faceLeft());
 					commands.push('fire');
 				}
 			}
 			if (state.otherCoords.n > state.myCoords.n) {
-				obstacle = state.firstObstacle('right');
+				obstacle = state.firstObstacle('east');
 				if(!obstacle || obstacle.n >= state.otherCoords.n) {
 					commands.push(state.faceRight());
 					commands.push('fire');
@@ -25,14 +25,14 @@ module.exports = function(state){
 		}
 		if (state.otherCoords.n == state.myCoords.n) {
 			if (state.otherCoords.m < state.myCoords.m) {
-				obstacle = state.firstObstacle('up');
+				obstacle = state.firstObstacle('north');
 				if(!obstacle || obstacle.m <= state.otherCoords.m) {
 					commands.push(state.faceUp());
 					commands.push('fire');
 				}
 			}
 			if (state.otherCoords.m > state.myCoords.m) {
-				obstacle = state.firstObstacle('down');
+				obstacle = state.firstObstacle('south');
 				if(!obstacle || obstacle.m >= state.otherCoords.m) {
 					commands.push(state.faceDown());
 					commands.push('fire');

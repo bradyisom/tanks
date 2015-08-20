@@ -8,8 +8,8 @@ var shared = require('./shared');
 
 var serverHost = argv.host || 'localhost';
 var serverPort = argv.port || 8080;
-var gameName = argv.game || 'tankyou:screen';
-var playerName = argv.player || 'player';
+var gameName = argv.game || 'yay:screen';
+var playerName = argv.player || 'Brady';
 
 var config = null;
 var playerId = null;
@@ -30,7 +30,7 @@ function request(cmd, data) {
 			}
 		};
 
-		console.log('sending command', cmd);
+		// console.log('sending command', cmd);
 
 		var req = http.request(options, function(res) {
 			if (res.headers['x-sm-playerid']) {
@@ -79,10 +79,27 @@ function getConfig() {
 
 
 function parseGrid(grid) {
-	var rows = grid.trim('\n').split('\n');
-	for(var r=0; r<rows.length; r++) {
-		rows[r] = rows[r].split('');
+	// console.log('grid', grid);
+	var rows = [];
+	for(var i=0; i<3; i++) {
+		var rowString = grid.trim('\n');
+		if(i%2 == 0) {
+			rowString = rowString.replace('X', '_');
+		}
+		rows.push(rowString.split('\n'));
 	}
+	rows = _.flatten(rows);
+	for(var r=0; r<rows.length; r++) {
+		var rowString = rows[r];
+		rows[r] = rowString.replace('X','_').split('');
+		rows[r].push(rowString.split(''));
+		rows[r].push(rowString.replace('X','_').split(''));
+		rows[r] = _.flatten(rows[r]);
+	}
+	// console.log('rows');
+	// for(var r=0; r<rows.length; r++) {
+	// 	console.log(rows[r].join(''));
+	// }
 	return rows;
 }
 

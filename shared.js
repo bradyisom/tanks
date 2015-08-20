@@ -5,12 +5,12 @@ var State = function(status, config) {
 	this.status = status;
 	this.config = config;
 	this.myCoords = this.coords('X');
-	this.otherCoords = this.coords('O');
+	this.otherCoords = this.closestCoords('O');
 };
 
 State.prototype.dist = function(m1, n1, m2, n2) {
-	var m_dst = m1 - m2;
-	var n_dst = n1 - n2;
+	var m_dst = Math.abs(m1 - m2);
+	var n_dst = Math.abs(n1 - n2);
 	return Math.sqrt(m_dst*m_dst + n_dst*n_dst);
 }
 
@@ -59,16 +59,16 @@ State.prototype.firstObstacle = function(dir, m, n) {
 	var m_end = m;
 	var n_end = n;
 	switch(dir) {
-	case 'up':
+	case 'north':
 		m_end = 0;
 		break;
-	case 'down':
+	case 'south':
 		m_end = this.status.grid.length-1;
 		break;
-	case 'left':
+	case 'west':
 		n_end = 0;
 		break;
-	case 'right':
+	case 'east':
 		n_end = this.status.grid[0].length-1;
 		break;
 	}
@@ -94,6 +94,39 @@ State.prototype.coords = function(obj) {
 
 State.prototype.closestCoords = function(obj) {
 	return this.objectCoords(obj, this.myCoords.m, this.myCoords.n);
+}
+
+State.prototype.getNextObj = function(orientation, m, n) {
+	m = m || this.myCoords.m;
+	n = n || this.myCoords.n;
+	orientation = orientation || this.status.orientation;
+
+	switch(orientation) {
+	case "south":
+		m++;
+		break;
+	case "north":
+		m--;
+		break;	
+	case "east":
+		n++;
+		break;
+	case "west":
+		n--;
+		break;	
+	}
+	return this.getObj(m,n);
+}
+
+State.prototype.oppositeOrientation = function(orientation) {
+	orientation = orientation || this.status.orientation;
+	switch(orientation) {
+		case "south": return "north";
+		case "north": return "south";
+		case "west": return "east";
+		case "east": return "west";
+	}
+	return "";
 }
 
 State.prototype.faceUp = function() {

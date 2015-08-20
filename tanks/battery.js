@@ -8,7 +8,6 @@ module.exports = function(state){
 
 	try{
 		var commands = [];
-		var myCoords = state.coords('X');
 		var batteryCoords = state.closestCoords('B');
 		if (batteryCoords.m != -1) {
 			commands = state.moveTowards(batteryCoords.m, batteryCoords.n, 'LWO');

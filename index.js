@@ -14,6 +14,6 @@ fs.readdirSync(normalizedPath).forEach(function(file) {
 
 // console.log('tanks', tanks);
 
-var tank = tanks[argv.tank || 'noop'];
+var tank = tanks[argv.tank || 'combo'];
 
 server.start(tank);

@@ -17,7 +17,7 @@ fs.readdirSync(normalizedPath).forEach(function(file) {
 	}
 });
 
-var usageCounts = {};
+var usageCounts = {total:0};
 
 module.exports = function(state){
 	var promise = null;
@@ -28,6 +28,8 @@ module.exports = function(state){
 		condition: function() {
 			return state.status.energy > state.config.laser_energy;
 		}
+	},{
+		name: 'avoid'
 	},{
 		name: 'battery',
 		condition: function() {
@@ -40,6 +42,8 @@ module.exports = function(state){
 			return state.status.energy > state.config.laser_energy;
 		}
 		// TODO: add run away algorithm
+	},{
+		name: 'walker'
 	},{
 		name: 'circle'
 	},{
@@ -61,7 +65,8 @@ module.exports = function(state){
 			// console.log(algorithmInfo);
 			usageCounts[algorithmInfo.name] = usageCounts[algorithmInfo.name] || 0;
 			usageCounts[algorithmInfo.name]++;
-			console.log('usageCounts', usageCounts);
+			usageCounts.total++;
+			// console.log('usageCounts', usageCounts);
 			return commands;
 		}
 		else if (algorithms.length) {
