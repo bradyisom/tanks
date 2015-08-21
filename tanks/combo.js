@@ -33,8 +33,14 @@ module.exports = function(state){
 	},{
 		name: 'battery',
 		condition: function() {
-			return (state.status.energy < (state.config.max_energy*0.5) ||
-					state.status.health < (state.config.max_health*0.5));
+			var battery = state.closestCoords('B');
+			var batteryDist = -1;
+			if(battery.m != -1 && battery.n != -1) {
+				batteryDist = state.dist(state.myCoords.m, state.myCoords.n, battery.m, battery.n);
+			}
+			return (batteryDist != -1 && batteryDist < 4) ||
+					(state.status.energy < (state.config.max_energy*0.75) ||
+					state.status.health < (state.config.max_health*0.75));
 		}
 	},{
 		name: 'follow',

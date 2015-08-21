@@ -21,7 +21,12 @@ module.exports = function(state){
 
 		var new_m = -1;
 		var new_n = -1;
-		if(state.myCoords.m == closestObj.m) {
+		var closestBattery = state.closestCoords('B');
+		if(closestBattery.m != -1 && closestBattery.n != -1) {
+			new_m = closestBattery.m;
+			new_n = closestBattery.n;
+		}
+		else if(state.myCoords.m == closestObj.m) {
 			if(state.getObj(state.myCoords.m+1, state.myCoords.n) == '_') {
 				new_m = state.myCoords.m+1;
 				new_n = state.myCoords.n;
